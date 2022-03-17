@@ -15,7 +15,7 @@ class OntologyRegistryControllerTestSuite extends ScalatraSuite with StandardTes
 
     val notifier : OntologyUpdatesNotifier = mock[ OntologyUpdatesNotifier ]
     val registry : OntologyRegistry = mock[ OntologyRegistry ]
-    val auth : AuthConfig = AuthConfig( None, bypassAuth = true )
+    val auth : AuthConfig = AuthConfig( None, useDartAuth = false )
     val controller = new OntologyRegistryController( registry, notifier, auth )
 
     val ontologyArtifactTemplate = OntologyArtifact( id = UUID.randomUUID().toString, tenant = "tenant-1", version = 1, ontology = "ontology", tags = List( "tag-1" ) )

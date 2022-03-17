@@ -23,7 +23,8 @@ class OntologyRegistryController( registry : OntologyRegistry,
 
     override val serviceName : String = serviceNameIn
     override val secretKey : Option[ String ] = authConfig.secretKey
-    override val bypassAuth : Boolean = authConfig.bypassAuth
+    override val useDartAuth : Boolean = authConfig.useDartAuth
+    override val basicAuthCredentials : Seq[ (String, String) ] = authConfig.basicAuthCredentials
 
     setStandardConfig()
 

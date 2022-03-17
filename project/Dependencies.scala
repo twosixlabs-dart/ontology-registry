@@ -7,10 +7,10 @@ object Dependencies {
 
     val betterFilesVersion = "3.8.0"
 
-    val dartCommonsVersion = "3.0.296"
-    val cdr4sVersion = "3.0.264"
-    val dartAuthCommonsVersion = "3.1.144"
-    val dartRestCommonsVersion = "3.0.15"
+    val dartCommonsVersion = "3.0.30"
+    val cdr4sVersion = "3.0.9"
+    val dartAuthCommonsVersion = "3.1.3"
+    val dartRestCommonsVersion = "3.0.4"
 
     val tapirVersion = "0.18.3"
     val circeVersion = "0.13.0"
@@ -29,7 +29,7 @@ object Dependencies {
     val slickVersion = "3.3.3"
     val slickPgVersion = "0.19.7"
 
-    val arangoRepoVersion = "3.0.35"
+    val arangoRepoVersion = "3.0.8"
 
     val betterFiles = Seq( "com.github.pathikrit" %% "better-files" % betterFilesVersion )
 

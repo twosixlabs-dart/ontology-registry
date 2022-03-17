@@ -49,14 +49,9 @@ lazy val commonSettings = {
         WipConfig / parallelExecution := false )
 }
 
-lazy val publishSettings = Seq(
-    publishTo := {
-	// TODO
-	None
-    },
-    publishMavenStyle := true )
-
-lazy val disablePublish = Seq( publish := {} )
+lazy val disablePublish = Seq(
+    skip.in( publish ) := true,
+    )
 
 lazy val assemblySettings = Seq(
     assembly / assemblyMergeStrategy := {
@@ -67,6 +62,23 @@ lazy val assemblySettings = Seq(
     assembly / test := {},
     Compile / run / mainClass := Some( "Main" ) )
 
+sonatypeProfileName := "com.twosixlabs"
+inThisBuild(List(
+    organization := "com.twosixlabs.dart.ontologies",
+    homepage := Some(url("https://github.com/twosixlabs-dart/ontology-registry")),
+    licenses := List("GNU-Affero-3.0" -> url("https://www.gnu.org/licenses/agpl-3.0.en.html")),
+    developers := List(
+        Developer(
+            "twosixlabs-dart",
+            "Two Six Technologies",
+            "",
+            url("https://github.com/twosixlabs-dart")
+            )
+        )
+    ))
+
+ThisBuild / sonatypeCredentialHost := "s01.oss.sonatype.org"
+ThisBuild / sonatypeRepository := "https://s01.oss.sonatype.org/service/local"
 
 /*
    ##############################################################################################
@@ -88,24 +100,21 @@ lazy val ontologyRegistryApi = ( project in file( "ontology-registry-api" ) )
   .configs( IntegrationConfig, WipConfig )
   .disablePlugins( sbtassembly.AssemblyPlugin )
   .settings( commonSettings,
-             libraryDependencies ++= tapir ++ dartRestCommons ++ dartCommons ++ cdr4s,
-             publishSettings )
+             libraryDependencies ++= tapir ++ dartRestCommons ++ dartCommons ++ cdr4s)
 
 lazy val ontologyRegistryServices = ( project in file( "ontology-registry-services" ) )
   .configs( IntegrationConfig, WipConfig )
   .dependsOn( ontologyRegistryApi )
   .disablePlugins( sbtassembly.AssemblyPlugin )
   .settings( commonSettings,
-             libraryDependencies ++= database ++ dartCommons ++ kafka ++ dartAuthCommons,
-             publishSettings )
+             libraryDependencies ++= database ++ dartCommons ++ kafka ++ dartAuthCommons)
 
 lazy val ontologyRegistryControllers = ( project in file( "ontology-registry-controllers" ) )
   .configs( IntegrationConfig, WipConfig )
   .dependsOn( ontologyRegistryApi, ontologyRegistryServices )
   .disablePlugins( sbtassembly.AssemblyPlugin )
   .settings( commonSettings,
-             libraryDependencies ++= scalatra ++ tapir ++ dartRestCommons ++ dartAuthCommons ++ dartCommons,
-             publishSettings )
+             libraryDependencies ++= scalatra ++ tapir ++ dartRestCommons ++ dartAuthCommons ++ dartCommons)
 
 lazy val ontologyRegistryMicroservice = ( project in file( "ontology-registry-microservice" ) )
   .configs( IntegrationConfig, WipConfig )
