@@ -1,19 +1,21 @@
 package com.twosixlabs.dart.ontologies.kafka
 
-import com.twosixlabs.dart.auth.tenant.CorpusTenantIndex
+import com.twosixlabs.dart.arangodb.tables.CanonicalDocsTable
+import com.twosixlabs.dart.auth.tenant.{ CorpusTenantIndex, DartTenant }
 import com.twosixlabs.dart.json.JsonFormat
 import com.twosixlabs.dart.ontologies.OntologyUpdatesNotifier
-import com.twosixlabs.dart.ontologies.api.{DocumentUpdateNotification, TenantOntologyMapping}
-import org.apache.kafka.clients.producer.{KafkaProducer, ProducerRecord}
+import com.twosixlabs.dart.ontologies.api.{ DocumentUpdateNotification, TenantOntologyMapping }
+import org.apache.kafka.clients.producer.{ KafkaProducer, ProducerRecord }
 
-import java.util.concurrent.{Future => JavaFuture}
+import java.util.concurrent.{ Future => JavaFuture }
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.duration.DurationInt
-import scala.concurrent.{Await, Future}
+import scala.concurrent.{ Await, Future }
 import scala.util.Try
 
 
 class KafkaOntologyUpdatesNotifier( tenantIndex : CorpusTenantIndex,
+                                    canonicalDocsTable : CanonicalDocsTable,
                                     kafkaProducer : KafkaProducer[ String, String ],
                                     topic : String )
   extends OntologyUpdatesNotifier {
@@ -25,8 +27,13 @@ class KafkaOntologyUpdatesNotifier( tenantIndex : CorpusTenantIndex,
     }
 
     override def update( tenantId : TenantId, ontologyId : OntologyId ) : Try[ Boolean ] = {
+        val docsFuture : Future[ Seq[ String ] ] =
+            if ( tenantId == DartTenant.globalId )
+                canonicalDocsTable.getAllDocIds()
+            else tenantIndex.tenantDocuments( tenantId )
+
         Try {
-            val fut = tenantIndex.tenantDocuments( tenantId ) flatMap {
+            val fut = docsFuture flatMap {
                 ( docs : Seq[ String ] ) => {
                     val updateMessage = DocumentUpdateNotification( ontologies = Set( TenantOntologyMapping( tenantId, ontologyId ) ), document = None )
                     val updateMessageJson = JsonFormat.marshalFrom( updateMessage ).get

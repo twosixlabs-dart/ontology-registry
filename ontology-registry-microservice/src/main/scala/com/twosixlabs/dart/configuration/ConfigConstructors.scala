@@ -1,13 +1,14 @@
 package com.twosixlabs.dart.configuration
 
 import com.mchange.v2.c3p0.ComboPooledDataSource
-import com.twosixlabs.dart.arangodb.{Arango, ArangoConf}
+import com.twosixlabs.dart.arangodb.tables.CanonicalDocsTable
+import com.twosixlabs.dart.arangodb.{ Arango, ArangoConf }
 import com.twosixlabs.dart.auth.controllers.SecureDartController
 import com.twosixlabs.dart.auth.controllers.SecureDartController.AuthDependencies
 import com.twosixlabs.dart.auth.tenant.indices.ArangoCorpusTenantIndex
 import com.twosixlabs.dart.ontologies.OntologyRegistryService
 import com.twosixlabs.dart.ontologies.api.OntologyArtifactTable
-import com.twosixlabs.dart.ontologies.dao.sql.{PgSlickProfile, SqlOntologyArtifactTable}
+import com.twosixlabs.dart.ontologies.dao.sql.{ PgSlickProfile, SqlOntologyArtifactTable }
 import com.twosixlabs.dart.ontologies.providers.KafkaProvider
 import com.twosixlabs.dart.sql.SqlClient
 import com.typesafe.config.Config
@@ -92,6 +93,13 @@ object ConfigConstructors {
                 port = config.getInt( "arangodb.port" ),
                 database = config.getString( "arangodb.database" )
                 ) )
+        }
+    }
+
+    implicit object CanonicalDocsFromConfig extends ConfigConstructor[ Config, CanonicalDocsTable ] {
+        override def buildFromConfig( config : Config ) : CanonicalDocsTable = {
+            val arango = config.build[ Arango ]
+            new CanonicalDocsTable( arango )
         }
     }
 

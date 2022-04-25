@@ -29,7 +29,7 @@ object Dependencies {
     val slickVersion = "3.3.3"
     val slickPgVersion = "0.19.7"
 
-    val arangoRepoVersion = "3.0.8"
+    val arangoRepoVersion = "3.0.16"
 
     val betterFiles = Seq( "com.github.pathikrit" %% "better-files" % betterFilesVersion )
 
