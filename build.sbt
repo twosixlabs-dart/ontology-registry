@@ -36,6 +36,7 @@ lazy val commonSettings = {
 //        libraryDependencySchemes += "org.scala-lang.modules" %% "scala-java8-compat" % "always", // TODO: actually resolve this conflict
         dependencyOverrides ++= Seq( "com.fasterxml.jackson.module" %% "jackson-module-scala" % "2.10.5",
                                      "com.arangodb" %% "velocypack-module-scala" % "1.2.0",
+                                     "com.twosixlabs.dart" %% "dart-arangodb-datastore" % arangoRepoVersion,
                                      "com.fasterxml.jackson.datatype" % "jackson-datatype-jsr310" % "2.10.5",
                                      "com.fasterxml.jackson.core" % "jackson-databind" % "2.10.5" ),
         // `sbt test` should skip tests tagged IntegrationTest

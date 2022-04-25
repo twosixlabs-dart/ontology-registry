@@ -1,5 +1,6 @@
 package com.twosixlabs.dart
 
+import com.twosixlabs.dart.arangodb.tables.CanonicalDocsTable
 import com.twosixlabs.dart.auth.controllers.SecureDartController.AuthDependencies
 import com.twosixlabs.dart.auth.tenant.indices.ArangoCorpusTenantIndex
 import com.twosixlabs.dart.ontologies.OntologyRegistryService
@@ -10,7 +11,7 @@ import com.twosixlabs.dart.rest.ApiStandards
 import com.twosixlabs.dart.rest.scalatra.DartRootServlet
 import com.typesafe.config.ConfigFactory
 import org.scalatra.LifeCycle
-import org.slf4j.{Logger, LoggerFactory}
+import org.slf4j.{ Logger, LoggerFactory }
 
 import javax.servlet.ServletContext
 
@@ -22,13 +23,14 @@ class ScalatraInit extends LifeCycle {
     val config = ConfigFactory.defaultApplication().resolve()
 
     private val ontologyRegistry = config.build[ OntologyRegistryService ]
+    private val docsTable = config.build[ CanonicalDocsTable ]
     private val tenantIndex = config.build[ ArangoCorpusTenantIndex ]
     private val kafkaProvider = config.build[ KafkaProvider ]
     private val authDeps = config.build[ AuthDependencies ]
 
     private val notificationTopic = config.getString( "updates.topic" )
 
-    val notifier = new KafkaOntologyUpdatesNotifier( tenantIndex, kafkaProvider.newProducer[ String, String ]( config ), notificationTopic )
+    val notifier = new KafkaOntologyUpdatesNotifier( tenantIndex, docsTable, kafkaProvider.newProducer[ String, String ]( config ), notificationTopic )
 
     val ontologiesController = new OntologyRegistryController( ontologyRegistry, notifier, authDeps )
 

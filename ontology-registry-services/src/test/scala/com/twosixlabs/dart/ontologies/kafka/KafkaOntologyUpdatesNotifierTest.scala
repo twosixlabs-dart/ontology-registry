@@ -1,12 +1,13 @@
 package com.twosixlabs.dart.ontologies.kafka
 
-import com.twosixlabs.dart.auth.tenant.CorpusTenantIndex
+import com.twosixlabs.dart.arangodb.tables.CanonicalDocsTable
+import com.twosixlabs.dart.auth.tenant.{ CorpusTenantIndex, DartTenant }
 import com.twosixlabs.dart.json.JsonFormat
-import com.twosixlabs.dart.ontologies.api.{DocumentUpdateNotification, TenantOntologyMapping}
+import com.twosixlabs.dart.ontologies.api.{ DocumentUpdateNotification, TenantOntologyMapping }
 import com.twosixlabs.dart.test.base.StandardTestBase3x
-import io.github.embeddedkafka.{EmbeddedKafka, EmbeddedKafkaConfig}
+import io.github.embeddedkafka.{ EmbeddedKafka, EmbeddedKafkaConfig }
 import org.apache.kafka.clients.producer.KafkaProducer
-import org.apache.kafka.common.serialization.{Deserializer, Serdes, Serializer}
+import org.apache.kafka.common.serialization.{ Deserializer, Serdes, Serializer }
 
 import java.util.Properties
 import scala.concurrent.Future
@@ -19,6 +20,7 @@ class KafkaOntologyUpdatesNotifierTest extends StandardTestBase3x with EmbeddedK
     private implicit val deserializer : Deserializer[ String ] = Serdes.String.deserializer()
 
     val tenantIndex = mock[ CorpusTenantIndex ]
+    val docsTable = mock[ CanonicalDocsTable ]
 
     val testTopic = "test-topic"
 
@@ -34,7 +36,7 @@ class KafkaOntologyUpdatesNotifierTest extends StandardTestBase3x with EmbeddedK
         }
 
         val producer : KafkaProducer[ String, String ] = new KafkaProducer[ String, String ]( props )
-        val notifier = new KafkaOntologyUpdatesNotifier( tenantIndex, producer, testTopic )
+        val notifier = new KafkaOntologyUpdatesNotifier( tenantIndex, docsTable, producer, testTopic )
 
         val testTenantId = "test-tenant"
         val testOntologyId = "test-ontology"
@@ -56,6 +58,40 @@ class KafkaOntologyUpdatesNotifierTest extends StandardTestBase3x with EmbeddedK
 
             val messages = result.map( v => JsonFormat.unmarshalTo[ DocumentUpdateNotification ]( v._2, classOf[ DocumentUpdateNotification ] ).get )
             all( messages ) shouldBe DocumentUpdateNotification( document = None, ontologies = Set( TenantOntologyMapping( testTenantId, testOntologyId ) ) )
+        }
+    }
+
+    it should "send a notifications about global docs to the specified tenant" in {
+        val props : Properties = {
+            val p = new Properties()
+            p.setProperty( "bootstrap.servers", "localhost:6310" )
+            p.setProperty( "key.serializer", "org.apache.kafka.common.serialization.StringSerializer" )
+            p.setProperty( "value.serializer", "org.apache.kafka.common.serialization.StringSerializer" )
+            p
+        }
+
+        val producer : KafkaProducer[ String, String ] = new KafkaProducer[ String, String ]( props )
+        val notifier = new KafkaOntologyUpdatesNotifier( tenantIndex, docsTable, producer, testTopic )
+
+        val testOntologyId = "test-ontology"
+        val testDocIds = List( "test-doc-1", "test-doc-2", "test-doc-3" )
+
+        when( docsTable.getAllDocIds() ).thenReturn( Future.successful( testDocIds ) )
+
+        withRunningKafka {
+
+            notifier.update( DartTenant.globalId, testOntologyId ) shouldBe Success( true )
+
+            val result : Seq[ (String, String) ] = consumeNumberKeyedMessagesFrom( testTopic, 3, true )
+
+            result should have size ( 3 )
+
+            val docIds = result.map( _._1 )
+
+            docIds.toSet shouldBe testDocIds.toSet
+
+            val messages = result.map( v => JsonFormat.unmarshalTo[ DocumentUpdateNotification ]( v._2, classOf[ DocumentUpdateNotification ] ).get )
+            all( messages ) shouldBe DocumentUpdateNotification( document = None, ontologies = Set( TenantOntologyMapping( DartTenant.globalId, testOntologyId ) ) )
         }
     }
 
